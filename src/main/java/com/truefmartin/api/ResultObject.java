@@ -1,24 +1,37 @@
 package com.truefmartin.api;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
-
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class ResultObject {
+    int weight;
 
-    List<String> results;
-    public ResultObject(List<AbstractMap.SimpleEntry<String, Integer>> results) {
-        this.results = new ArrayList<>();
-        for (var result: results) {
-            this.results.add("<a href=\"/" + result.getKey() + "\">" + result.getKey() +", With a weight: " + result.getValue()+ "</a>");
-        }
+    public int getWeight() {
+        return weight;
     }
 
-    public List<String> getResults() {
-        return results;
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public void setFile(String file) {
+        this.file = file;
+    }
+    public String getText() {
+        return text;
+    }
+    String file;
+    String text;
+    public ResultObject(AbstractMap.SimpleEntry<String, Integer> result) {
+        this.weight = result.getValue();
+        this.file = result.getKey();
+        this.text = "files/" + result.getKey();
+//        for (var result: results) {
+//            this.results.add("<a href=\"files/" + result.getKey() + "\">" + result.getKey() +", With a weight: " + result.getValue()+ "</a>");
+//        }
     }
 }

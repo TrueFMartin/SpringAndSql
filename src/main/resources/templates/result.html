@@ -8,9 +8,10 @@
 <h1>Result</h1>
 <p th:text="'query was: ' + ${queryobject.query}" />
 <a href="/query">Submit another message</a>
-<ol th:each="result: ${results}">
-    <li th:text="${result}" />
-</ol>
+<tr th:each="resultobject: ${results}">
+    <td> <a th:href="@{${resultobject.getText()}}"> <div> th:text="'File Name:' ${resultobject.getFile()}" </div></a> </td>
+    <td> th:text="${resultobject.getWeight()}"</td>
+</tr>
 
 </body>
 </html>
