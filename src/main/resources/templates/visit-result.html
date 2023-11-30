@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Query Submission</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+    <iframe th:src="@{/display(filename=${resultobject.getFile()})}"></iframe>
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

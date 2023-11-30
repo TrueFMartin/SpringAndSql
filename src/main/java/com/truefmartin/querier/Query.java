@@ -65,7 +65,7 @@ public class Query {
             return invertedFileQuery.queryPost(dictEntries, accumulatorType);
 
         } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+            return new CompareType[0];
         }
     }
 }

@@ -1,17 +1,117 @@
 <!DOCTYPE HTML>
 <html xmlns:th="https://www.thymeleaf.org">
 <head>
-    <title>Getting Started: Handling Form Submission</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Search Engine Results</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('./bg-image.jpg'); /* Add your background image here */
+            background-attachment: scroll;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: #333;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff; /* Solid background for the container */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        a {
+            color: #0275d8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        button {
+            background-color: #0275d8;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0256c8;
+        }
+
+        iframe {
+            border: none;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-<h1>Result</h1>
-<p th:text="'query was: ' + ${queryobject.query}" />
-<a href="/query">Submit another message</a>
-<tr th:each="resultobject: ${results}">
-    <td> <a th:href="@{${resultobject.getText()}}"> <div> th:text="'File Name:' ${resultobject.getFile()}" </div></a> </td>
-    <td> th:text="${resultobject.getWeight()}"</td>
-</tr>
+<div th:replace="fragments/header :: header"></div>
+
+<div class="container">
+    <h1>Results: Showing </h1>
+    <p th:text="'query was: ' + ${queryobject.query}" />
+    <a href="/query">Submit another query</a>
+    <table>
+        <tbody>
+        <tr th:each="resultobject: ${results}">
+            <td>
+                <a th:href="@{/display(filename=${resultobject.getFile()})}"> <p th:text="'File Name: ' + ${resultobject.getFile()}"></p></a>
+                <p th:text="'Score: ' + ${resultobject.getWeight()}"></p>
+                <button onclick="hideDisplayIframe(this)" th:name="${resultobject.getFile()}">Preview the Page</button>
+            </td>
+            <td>
+                <iframe height="1" hidden="true" th:id="${resultobject.getFile()}" th:src="@{/display(filename=${resultobject.getFile()})}" width="300"></iframe>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+<!--    <form action="#" th:action="@{/display}" method="post">-->
+<!--        <input type="hidden" name="file" th:value="${resultobject.getFile()}">-->
+<!--        <p><input type="submit" value="Display Page 2nd" /></p>-->
+<!--    </form>-->
+</div>
+
+<script th:inline="javascript">
+    function hideDisplayIframe(btn) {
+        var filename = btn.name;
+        var elem = document.getElementById(filename);
+        if (elem.hidden) {
+            elem.hidden = false;
+            elem.height = 450;
+            elem.width = 600;
+            btn.textContent = "Click to close preview";
+            window.location.href = "#" + filename;
+        } else {
+            elem.height = 1;
+            elem.width = 1;
+            elem.hidden = true;
+            btn.textContent = "Preview the Page";
+        }
+    }
+</script>
+<div th:replace="fragments/footer :: footer"></div>
 
 </body>
 </html>
