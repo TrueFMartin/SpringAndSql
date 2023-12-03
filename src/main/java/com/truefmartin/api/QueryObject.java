@@ -2,7 +2,6 @@ package com.truefmartin.api;
 
 public class QueryObject {
     private String query;
-
     public String getQuery() {
         return query;
     }

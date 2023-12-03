@@ -5,8 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
-<div th:replace="fragments/header :: header"></div>
-    <iframe th:src="@{/display(filename=${resultobject.getFile()})}"></iframe>
-<div th:replace="fragments/footer :: footer"></div>
+<div class="fixed" th:include="~{fragments/searchfancy :: search-fancy(${queryobject.query})}"></div>
+    <iframe width="100%" height="800px" th:src="@{/display(filename=${resultobject.getFile()})}"></iframe>
 </body>
 </html>

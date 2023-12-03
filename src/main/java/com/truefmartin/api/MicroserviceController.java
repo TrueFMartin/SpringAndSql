@@ -32,7 +32,7 @@ public class MicroserviceController {
   private static final Logger logger = LoggerFactory.getLogger(MicroserviceController.class);
 
   /** Example endpoint handler. */
-  @GetMapping("/")
+  @GetMapping("/hello-world")
   public @ResponseBody String index() {
     // Example of structured logging - add custom fields
     MDC.put("logField", "custom-entry");

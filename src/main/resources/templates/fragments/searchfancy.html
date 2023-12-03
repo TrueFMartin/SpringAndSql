@@ -1,0 +1,25 @@
+<div class="search-container navbar" th:fragment="search-fancy(queryterms)"
+     style="position: fixed;top: 0;list-style-type: none;margin: 5px;padding: 10px;width: 300px;background-color: #f1f1f1;height: 15%;overflow: hidden;border-radius: 8px;box-shadow: 0 4px 8px rgba(0,0,0,0.1);text-align: center;">
+
+    <!--/*@thymesVar id="queryobject" type="com.truefmartin.api.QueryObject"*/-->
+    <form action="#" th:action="@{/query}" th:object="${queryobject}" method="post">
+        <p style="margin: 10px 0;"><input id="terms" type="search" th:field="*{query}" th:value="${queryterms}" style="padding: 10px;border: 1px solid #ddd;border-radius: 4px;width: 300px;"></p>
+        <p style="margin: 10px 0;"><input type="submit" value="Submit" style="padding: 10px 15px;border: none;border-radius: 4px;margin: 5px;cursor: pointer;transition: background-color 0.3s;background-color: #4CAF50;color: white;"> <input type="reset" value="Reset" onclick="reset()" style="padding: 10px 15px;border: none;border-radius: 4px;margin: 5px;cursor: pointer;transition: background-color 0.3s;background-color: #f44336;color: white;"></p>
+    </form>
+    <div>
+    <button onclick="traverse()" style="padding: 10px;display: block; border: 1px solid #0256c8;border-radius: 4px;width: 26%;">Home</button>
+    </div>
+        <script th:inline="javascript">
+            function traverse() {
+                window.location.href = "/query"
+            }
+
+            function reset() {
+                elem = document.getElementById("terms")
+                elem.reset()
+                elem.value = ""
+                elem.text = 0
+
+            }
+        </script>
+    </div>

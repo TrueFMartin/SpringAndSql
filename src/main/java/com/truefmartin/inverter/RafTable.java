@@ -2,12 +2,15 @@ package com.truefmartin.inverter;
 
 
 import com.truefmartin.inverter.structs.Writeable;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
@@ -23,6 +26,7 @@ public class RafTable <T extends Writeable> implements AutoCloseable {
     private final String OUT_FILE_NAME;
     private final String CONFIG_FILE_NAME;
     private RandomAccessFile stream;
+    private String configFolder = "/";
 
 
     /**
@@ -112,15 +116,15 @@ public class RafTable <T extends Writeable> implements AutoCloseable {
      * @param status         the status to open the stream as
      */
     public RafTable(String configFileName, String outFileName, RafStatus status) {
-        this.CONFIG_FILE_NAME = "config/" + configFileName;
-        this.OUT_FILE_NAME = "config/" + outFileName;
+        this.CONFIG_FILE_NAME = configFileName;
+        this.OUT_FILE_NAME = outFileName;
         this.status = status;
         String data;
-        try (RandomAccessFile configStream = new RandomAccessFile(CONFIG_FILE_NAME, "r")){
-            this.stream = new RandomAccessFile(OUT_FILE_NAME, status.fileOpenOption());
+        try (RandomAccessFile configStream = new RandomAccessFile( configFolder + configFileName, "r")){
+            this.stream = new RandomAccessFile( configFolder + OUT_FILE_NAME, status.fileOpenOption());
             data = configStream.readLine();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error in Raf Table param constructor" + e);
         }
 
         String[] configValues = data.split(" ");
@@ -136,6 +140,20 @@ public class RafTable <T extends Writeable> implements AutoCloseable {
         this.RECORD_SIZE = sumOfSizes + NUM_COLUMNS + 1;
 
     }
+
+    public File getFileFromClassPath(String fileName) {
+        try {
+            return new ClassPathResource("./config/" +
+                    fileName).getFile();
+        } catch (IOException e) {
+            throw new RuntimeException(" Unable to load file in getFileFromClassPath", e);
+        }
+
+    }
+
+    public void printFnames(String sDir, int depth) throws IOException {
+        Files.find(Paths.get(sDir), depth, (p, bfa) -> bfa.isRegularFile()).forEach(System.out::println);
+    }
     /**
      * Instantiates a new Raf table.
      *
@@ -145,8 +163,8 @@ public class RafTable <T extends Writeable> implements AutoCloseable {
      * @param colSizes         the column sizes
      */
     public RafTable(String CONFIG_FILE_NAME, String OUT_FILE_NAME, RafStatus status, int... colSizes) {
-        this.CONFIG_FILE_NAME = "config/" + CONFIG_FILE_NAME;
-        this.OUT_FILE_NAME = "config/" + OUT_FILE_NAME;
+        this.CONFIG_FILE_NAME = CONFIG_FILE_NAME;
+        this.OUT_FILE_NAME = OUT_FILE_NAME;
         this.status = status;
         this.colSizes = colSizes;
         this.NUM_COLUMNS = colSizes.length;
@@ -188,8 +206,8 @@ public class RafTable <T extends Writeable> implements AutoCloseable {
         public Builder(String outFileName, String configFileName, RafStatus status, int numColumns) {
             this.NUM_COLUMNS = numColumns;
             this.colSizes = new int[NUM_COLUMNS];
-            this.OUT_FILE_NAME = "config/" + outFileName;
-            this.CONFIG_FILE_NAME = "config/" + configFileName;
+            this.OUT_FILE_NAME = outFileName;
+            this.CONFIG_FILE_NAME = configFileName;
             this.status = status;
             try {
                 if (status == RafStatus.READ)

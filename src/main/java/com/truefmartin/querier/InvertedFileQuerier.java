@@ -69,9 +69,13 @@ public class InvertedFileQuerier {
     }
 
     public CompareType[] queryPost(List<DictData> dictEntries, Query.AccumulatorType accumulatorType) throws ExecutionException, InterruptedException {
+        if (dictEntries == null || dictEntries.isEmpty()) {
+            throw new RuntimeException("error: dict entries is null or empty");
+        }
+
         // Get number of processors minus one, so we have a processor for the accumulator
-        int numProcessors = Runtime.getRuntime().availableProcessors() - 1;
-        // if fewer dict entries than processors, split up dict entries into smaller tasks
+        int numProcessors = Runtime.getRuntime().availableProcessors();
+//         if fewer dict entries than processors, split up dict entries into smaller tasks
         while(dictEntries.size() < numProcessors) {
             dictEntries.sort(Comparator.comparingInt(dictData -> Integer.parseInt(dictData.numDocs)));
             var dictToSplit = dictEntries.get(dictEntries.size()-1);
