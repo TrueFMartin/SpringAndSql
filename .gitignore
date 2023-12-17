@@ -16,7 +16,7 @@
 
 ### Maven ###
 # https://github.com/github/gitignore/blob/master/Maven.gitignore
-
+src/main/resources/templates/cachedfiles/*
 target/
 pom.xml.tag
 pom.xml.releaseBackup
