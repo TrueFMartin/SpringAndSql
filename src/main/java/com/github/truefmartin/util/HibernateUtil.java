@@ -29,7 +29,7 @@ public class HibernateUtil {
             throw new HibernateException("DATABASE_PASSWORD is not set");
         }
         String debug;
-        if ((debug = System.getenv("DATABASE_DEBUG")).isEmpty()) {
+        if ((debug = System.getenv("DATABASE_DEBUG")) == null) {
             debug = "false";
         }
         sessionFactory = new Configuration().configure()

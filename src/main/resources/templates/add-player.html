@@ -166,10 +166,20 @@
 
 <script>
     function selectHomeTeam(teamId, teamName) {
-    document.getElementById('team').value = teamName;
-    document.querySelector('input[name="homeTeamId"]').value = teamId;
-}
+        document.getElementById('team').value = teamName;
+        document.querySelector('input[name="homeTeamId"]').value = teamId;
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function (event) {
+            const homeTeam = document.getElementById('team').value;
+            if (homeTeam === '' ) {
+                alert('Please select a team.');
+                event.preventDefault(); // Prevent form from being submitted
+            }
 
+        });
+    });
 
 
     function showToast(message) {

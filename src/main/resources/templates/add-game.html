@@ -181,9 +181,9 @@
         alert('Home team cannot be the same as the away team');
         return;
     }
-    document.getElementById('homeTeam').value = teamName;
-    document.querySelector('input[name="homeTeamId"]').value = teamId;
-}
+        document.getElementById('homeTeam').value = teamName;
+        document.querySelector('input[name="homeTeamId"]').value = teamId;
+    }
 function selectAwayTeam(teamId, teamName) {
     if (document.getElementById('homeTeam').value === teamName) {
         alert('Away team cannot be the same as the home team');
