@@ -1,0 +1,61 @@
+<!-- src/main/resources/templates/fragments/header.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background-color: #f1f1f1;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 5;
+            border: 2px solid rgba(57, 115, 58, 0.82);
+        }
+        .navbar a {
+            color: black;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="menus">
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/" style="background-color: rgba(57,115,58,0.82); color: white; padding: 8px 10px;">Home</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Searches
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <li><a class="dropdown-item" href="/top-teams">Teams By Wins</a></li>
+                            <li><a class="dropdown-item" href="/showPlayers">Show all Players</a></li>
+                            <li><a class="dropdown-item" href="/teams">Team Games/Players</a></li>
+                            <li><a class="dropdown-item" href="/playersOfPosition">Player By Position</a></li>
+                            <li><a class="dropdown-item" href="/byDate">Games on Day</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Mutations
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink2">
+                            <li><a class="dropdown-item" href="/addPlayer">Add a Player</a></li>
+                            <li><a class="dropdown-item" href="/addGame">Add a Game</a></li>
+                            <li><a class="dropdown-item" href="/addTeam">Add a Team</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

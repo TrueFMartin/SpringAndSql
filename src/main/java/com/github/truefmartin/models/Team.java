@@ -1,19 +1,16 @@
 package com.github.truefmartin.models;
 
-import com.github.truefmartin.views.VarArgPrintFields;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.lang.reflect.Field;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "team")
 public class Team {
     @Id
     @ColumnDefault("unique_rowid()")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "team_id", nullable = false)
     public Long id;
 
@@ -26,34 +23,64 @@ public class Team {
     @Column(name = "conference")
     @Enumerated(EnumType.STRING)
     public ConferenceType conference;
-//
-//    @Override
-//    public Field[] getFields() {
-//        return Game.class.getFields();
-//    }
 
     public enum ConferenceType {
-        AFC,
-        NFC
+        afc,
+        nfc;
+        private final String displayValue;
+        ConferenceType() {
+            this.displayValue = DivisionType.inner.displayNames.get(this.ordinal());
+        }
+        public String getDisplayValue() {
+            return displayValue;
+        }
+        private static class inner {
+            static ArrayList<String> displayNames = new ArrayList<>(){
+                {
+                    add("AFC");
+                    add("NFC");
+                }
+            };
+        }
     }
 
     @Column(name = "division")
     @Enumerated(EnumType.STRING)
     public DivisionType division;
     public enum DivisionType {
-        EAST,
-        NORTH,
-        SOUTH,
-        WEST
+        east,
+        north,
+        south,
+        west;
+        private final String displayValue;
+        DivisionType() {
+            this.displayValue = inner.displayNames.get(this.ordinal());
+        }
+        public String getDisplayValue() {
+            return displayValue;
+        }
+        private static class inner {
+            static ArrayList<String> displayNames = new ArrayList<>(){
+                {
+                    add("East");
+                    add("North");
+                    add("South");
+                    add("West");
+                }
+            };
+        }
     }
 
-//
-//    @OneToMany(mappedBy = "teamId1")
-//    public Set<Game> gamesHome = new LinkedHashSet<>();
-//    @OneToMany(mappedBy = "teamId2")
-//    public Set<Game> gamesAway = new LinkedHashSet<>();
-//    @OneToMany(mappedBy = "team")
-//    public Set<Player> players = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "homeTeam")
+    public Set<Game> gamesHome = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "awayTeam")
+    public List<Game> gamesAway = new ArrayList<>();
+
+
+
+    @OneToMany(mappedBy = "team")
+    public Set<Player> players = new LinkedHashSet<>();
 
 
 
@@ -96,22 +123,30 @@ public class Team {
     public void setDivision(DivisionType division) {
         this.division = division;
     }
-//
-//    public Set<Game> getGamesHome() {
-//        return gamesHome;
-//    }
-//
-//    public void setGamesHome(Set<Game> gamesHome) {
-//        this.gamesHome = gamesHome;
-//    }
-//
-//    public Set<Game> getGamesAway() {
-//        return gamesAway;
-//    }
-//
-//    public void setGamesAway(Set<Game> gamesAway) {
-//        this.gamesAway = gamesAway;
-//    }
+
+    public Set<Game> getGamesHome() {
+        return gamesHome;
+    }
+
+    public void setGamesHome(Set<Game> gamesHome) {
+        this.gamesHome = gamesHome;
+    }
+
+    public List<Game> getGamesAway() {
+        return gamesAway;
+    }
+
+    public void setGamesAway(List<Game> gamesAway) {
+        this.gamesAway = gamesAway;
+    }
+
+    public Set<Player> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(Set<Player> players) {
+        this.players = players;
+    }
 
     @Override
     public boolean equals(Object o) {

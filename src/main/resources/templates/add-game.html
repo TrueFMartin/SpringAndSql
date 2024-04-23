@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background-color: #f1f1f1;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 5;
+            border: 2px solid rgba(57, 115, 58, 0.82);
+        }
+        .navbar a {
+            color: black;
+            text-decoration: none;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+        }
+
+        thead th {
+            margin-top: 40px;
+            background-color: #395870;
+            color: #fff;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        th {
+            height: 40px;
+            font-size: 16px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        input:read-only {
+            background-color: #ddd; /* This will make the background color gray */
+            cursor: not-allowed; /* This will change the cursor to a "not allowed" cursor when hovering over the input */
+            border: 4px solid #000000;
+        }
+        toast {
+            visibility: hidden;
+            max-width: 50%;
+            height: auto;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 25%;
+            font-size: 17px;
+            margin-left: -125px;
+            padding: 10px;
+            transition: visibility 0.5s, opacity 0.5s linear;
+            opacity: 0;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            transition: visibility 0.5s, opacity 0.5s linear;
+        }
+
+        .toast.hide {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.5s, opacity 0.5s linear;
+        }
+
+        form {
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            text-align: left;
+            align-content: center;
+        }
+        input:invalid {
+            border: 2px dashed red;
+        }
+
+        form input {
+            margin: 10px 0;
+            align-items: center;
+            width: 30%;
+            left: 100%
+        }
+
+    </style>
+</head>
+<!--<div th:insert="~{fragments/search :: search-container('')}"></div>-->
+<body>
+<!--<div th:replace="~{fragments/header :: menus}"></div>-->
+<div th:replace="~{fragments/new-header :: menus}"></div>
+
+<h1 style="text-align: center; margin-top: 15%">Add Game</h1>
+<div id="toast" class="toast hide">
+    This is a toast message.
+</div>
+<div class="formContainer">
+<form th:action="@{/addGame}" th:object="${game}" method="post">
+    <input type="hidden" name="homeTeamId" th:field="${teamIds.homeTeamId}" required/>
+    <input type="hidden" name="awayTeamId" th:field="${teamIds.awayTeamId}" required />
+
+    <div style="border-color: #000000">
+
+    <div>
+        <label for="homeTeam">Home Team</label>
+        <input type="text" id="homeTeam" readonly required />
+    </div>
+    <div>
+        <label for="awayTeam">Away Team</label>
+        <input type="text" id="awayTeam" readonly required />
+    </div>
+    </div>
+    <div>
+        <label style="margin-right: 50px;" for="date">Date</label>
+        <input type="date" th:field="*{date}" required min="2024-01-01"/>
+    </div>
+    <div>
+        <label  for="score1">Home Team Score</label>
+        <input name="score1" class="score" type="number" th:field="*{score1}" min="0" max="100" required/>
+    </div>
+    <div>
+        <label for="score2">Away Team Score</label>
+        <input name="score2" class="score" type="number" th:field="*{score2}" min="0" max="100" required/>
+    </div>
+    <button style="margin: 8px; margin-left: 40%; margin-right:40%" type="submit">Add Game</button>
+</form>
+<div>
+<table style="z-index: -1">
+    <thead style="z-index: -1">
+    <tr style="z-index: -1">
+        <th>Team Name</th>
+        <th>Select as Home</th>
+        <th>Select as Away</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="thisTeam: ${teams}">
+        <td th:text="${thisTeam.nickname}"></td>
+        <td><button type="button" th:attr="onclick=|selectHomeTeam('${thisTeam.id}', '${thisTeam.nickname}')|">Select as Home</button></td>
+        <td><button type="button" th:attr="onclick=|selectAwayTeam('${thisTeam.id}', '${thisTeam.nickname}')|">Select as Away</button></td>
+    </tr>
+    </tbody>
+</table>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script>
+    function selectHomeTeam(teamId, teamName) {
+    if (document.getElementById('awayTeam').value === teamName) {
+        alert('Home team cannot be the same as the away team');
+        return;
+    }
+    document.getElementById('homeTeam').value = teamName;
+    document.querySelector('input[name="homeTeamId"]').value = teamId;
+}
+function selectAwayTeam(teamId, teamName) {
+    if (document.getElementById('homeTeam').value === teamName) {
+        alert('Away team cannot be the same as the home team');
+        return;
+    }
+    document.getElementById('awayTeam').value = teamName;
+    document.querySelector('input[name="awayTeamId"]').value = teamId;
+    document.querySelector('input[name="awayTeamId"]').value = teamId;
+}
+
+    const score1 = document.getElementsByName('score1').item(0);
+    const score2 = document.getElementsByName('score2').item(0);
+    score1.addEventListener('input', function () {
+        if (score1.value !== 0 && score2.value !== 0) {
+            if (score1.value == score2.value) {
+                showToast('Scores cannot be the same, incrementing home score');
+                score1.value++;
+            }
+        }
+    });
+
+    score2.addEventListener('input', function () {
+        if (score2.value != 0 && score1.value != 0) {
+            if (score1.value == score2.value) {
+                showToast('Scores cannot be the same, incrementing away score');
+                score2.value++;
+            }
+        }
+    });
+
+    function showToast(message) {
+        var toast = document.getElementById("toast");
+        toast.className = "toast show";
+        toast.textContent = message;
+
+        setTimeout(function(){
+            toast.className = toast.className.replace("show", "hide");
+        }, 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function (event) {
+            const homeTeam = document.getElementById('homeTeam').value;
+            const awayTeam = document.getElementById('awayTeam').value;
+            if (homeTeam === '' || awayTeam === '') {
+                alert('Please select both the home and away teams.');
+                event.preventDefault(); // Prevent form from being submitted
+            } else if (score1.value === score2.value) {
+                alert('Scores cannot be the same');
+                event.preventDefault();
+            }
+
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

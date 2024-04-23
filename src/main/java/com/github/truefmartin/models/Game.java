@@ -1,11 +1,9 @@
 package com.github.truefmartin.models;
 
-import com.github.truefmartin.views.VarArgPrintFields;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.lang.reflect.Field;
-import java.time.LocalDate;
+import java.sql.Date;
 import java.util.Objects;
 
 @Entity
@@ -26,13 +24,17 @@ public class Game {
     public Team awayTeam;
 
     @Column(name = "score1")
-    public Long score1;
+    public int score1;
 
     @Column(name = "score2")
-    public Long score2;
+    public int score2;
 
     @Column(name = "date")
-    public LocalDate date;
+    public Date date;
+
+    public boolean homeTeamWon() {
+        return score1 > score2;
+    }
 
     public Long getId() {
         return id;
@@ -58,27 +60,27 @@ public class Game {
         this.awayTeam = awayTeam;
     }
 
-    public Long getScore1() {
+    public int getScore1() {
         return score1;
     }
 
-    public void setScore1(Long score1) {
+    public void setScore1(int score1) {
         this.score1 = score1;
     }
 
-    public Long getScore2() {
+    public int getScore2() {
         return score2;
     }
 
-    public void setScore2(Long score2) {
+    public void setScore2(int score2) {
         this.score2 = score2;
     }
 
-    public LocalDate getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 
@@ -87,6 +89,7 @@ public class Game {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Game game = (Game) o;
+        if (id != 0 && game.id != 0) return id == game.id;
         return Objects.equals(score1, game.score1) && Objects.equals(score2, game.score2) && Objects.equals(date, game.date);
     }
 

@@ -1,6 +1,5 @@
 package com.github.truefmartin.models;
 
-import com.github.truefmartin.views.VarArgPrintFields;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -11,6 +10,7 @@ import java.util.Objects;
 public class Player {
     @Id
     @ColumnDefault("unique_rowid()")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "player_id", nullable = false)
     public Long id;
 
@@ -25,16 +25,9 @@ public class Player {
     @Column(name = "position")
     @Enumerated(EnumType.STRING)
     public PositionType position;
-    public enum PositionType {
-        QUARTERBACK,
-        RUNNING_BACK,
-        WIDE_RECEIVER,
-        TIGHT_END,
-        DEFENSIVE_END,
-        LINEBACKER,
-        CORNERBACK,
-        SAFETY
-    }
+
+
+
 
     public Long getId() {
         return id;

@@ -1,18 +1,20 @@
 package com.github.truefmartin;
 
-import com.github.truefmartin.exceptions.EmptyResultsException;
 import com.github.truefmartin.models.*;
+import com.github.truefmartin.util.HibernateUtil;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * The JpaModel class is responsible for managing the database operations.
  * It uses Hibernate to interact with the database.
  */
 public class JpaModel implements AutoCloseable{
-
+    private static final Logger logger =
+            LoggerFactory.getLogger(JpaModel.class);
     /**
      * Constructs a new JpaModel object.
      * If the sessionFactory is null, it builds a new one.
@@ -32,79 +34,21 @@ public class JpaModel implements AutoCloseable{
         HibernateUtil.close();
     }
 
-    /*
-     * The following methods are used to interact with the database. Each method opens a new session,
-     * performs the database operation, and then closes the session even if an exception is thrown.
-     */
 
-    /**
-     * Retrieves the menus of a specific restaurant.
-     * @param restaurantName the name of the restaurant
-     * @param cityName the city where the restaurant is located
-     * @return a list of menus
-     * @throws EmptyResultsException if no menus are found
-     */
-//    public static List<DisplayDishMenu> getMenusOfRestaurant(String restaurantName, String cityName) throws EmptyResultsException {
-//        try(var tx = HibernateUtil.openSession()) {
-//            return getMenusOfRestaurant(tx, restaurantName, cityName);
-//        }
-//    }
-
-    /**
-     * Retrieves the menus that contain a specific dish.
-     * @param dishName the name of the dish
-     * @return a list of menus
-     * @throws EmptyResultsException if no menus are found
-     */
-//    public static List<DisplayRestaurantMenu> getMenusOfDish(String dishName) throws EmptyResultsException {
-//        try(var tx = HibernateUtil.openSession()) {
-//            return getMenusOfDish(tx, dishName);
-//        }
-//    }
-
-    /**
-     * Retrieves the orders of a specific restaurant.
-     * @param restaurantName the name of the restaurant
-     * @param cityName the city where the restaurant is located
-     * @return a list of orders
-     * @throws EmptyResultsException if no orders are found
-     */
-//    public static List<DisplayDishMenuOrder> getOrdersOfRestaurant(String restaurantName, String cityName) throws EmptyResultsException {
-//        try(var tx = HibernateUtil.openSession()) {
-//            return getOrdersOfRestaurant(tx, restaurantName, cityName);
-//        }
-//    }
-
-    public static void addGame(Game game) {
+    public static void addGame(Game game, Long homeTeamId, Long awayTeamId) {
         try(var tx = HibernateUtil.openSession()) {
-            addGame(tx, game);
+            addGame(tx, game, homeTeamId, awayTeamId);
         }
     }
 
-    /**
-     * Retrieves all orders from the database.
-     * @return a list of all orders
-     * @throws EmptyResultsException if no orders are found
-     */
-//    public static List<DisplayRestaurantDishOrder> getAllOrders() throws EmptyResultsException {
-//        try(var tx = HibernateUtil.openSession()) {
-//            return getAllOrders(tx);
-//        }
-//    }
 
-    /**
-     * Deletes an order from the database.
-     * @param order the order to be deleted
-     */
-//    public static void deleteOrder(FoodOrderEntity order) {
-//        try(var tx = HibernateUtil.openSession()) {
-//            deleteOrder(tx, order);
-//        }
-//    }
-
-    public static void addTeam(Team team) {
+    public static Long addTeam(Team team, boolean getID) {
         try(var tx = HibernateUtil.openSession()) {
             addTeam(tx, team);
+            if (!getID) {
+                return -1L;
+            }
+            return team.getId();
         }
     }
 
@@ -113,15 +57,27 @@ public class JpaModel implements AutoCloseable{
         tx.persist(team);
         tx.getTransaction().commit();
     }
-
-    public static void addPlayer(Player player) {
+    public static List<Player> getPlayersOfTeam(Long teamId) {
         try(var tx = HibernateUtil.openSession()) {
-            addPlayer(tx, player);
+            return getPlayersOfTeam(tx, teamId);
         }
     }
 
-    private static void addPlayer(Session tx, Player player) {
+    private static List<Player> getPlayersOfTeam(Session tx, Long teamId) {
+        return tx.createQuery(
+                "from Player p where p.team.id = :teamId",
+                Player.class
+        ).setParameter("teamId", teamId).getResultList();
+    }
+    public static void addPlayer(Player player, Long teamId) {
+        try(var tx = HibernateUtil.openSession()) {
+            addPlayer(tx, player, teamId);
+        }
+    }
+
+    private static void addPlayer(Session tx, Player player, Long teamId) {
         tx.beginTransaction();
+        player.setTeam(tx.get(Team.class, teamId));
         tx.persist(player);
         tx.getTransaction().commit();
     }
@@ -140,15 +96,15 @@ public class JpaModel implements AutoCloseable{
         ).setParameter("team", team).getResultList();
     }
 
-    public static List<Player> getPlayerOfPosition(Player.PositionType position) {
+    public static List<Player> getPlayerOfPosition(PositionType position) {
         try(var tx = HibernateUtil.openSession()) {
             return getPlayerOfPosition(tx, position);
         }
     }
 
-    private static List<Player> getPlayerOfPosition(Session tx, Player.PositionType position) {
+    private static List<Player> getPlayerOfPosition(Session tx, PositionType position) {
         return tx.createQuery(
-                "from Player p where p.position = :position",
+                "from Player p join fetch p.team where p.position = :position",
                 Player.class
         ).setParameter("position", position).getResultList();
     }
@@ -156,13 +112,24 @@ public class JpaModel implements AutoCloseable{
     public static LinkedHashMap<Team, Integer[]> getTeamsAndWins() {
         try(var tx = HibernateUtil.openSession()) {
             var games = getTeamsAndGames(tx);
+
+            if (games.isEmpty()) {
+                logger.error("No games found in database");
+                return new LinkedHashMap<>();
+            }
             //  View all teams arranged by conference (sorted alphabetically); within each conference, sort by number of wins overall and then number of wins within the same conference
             LinkedHashMap<Team, Integer[]> teamScoresMap = new LinkedHashMap<>();
             for (Game game :
                     games
             ) {
+
                 Team homeTeam = game.getHomeTeam();
                 Team awayTeam = game.getAwayTeam();
+                if (homeTeam == null || awayTeam == null) {
+                    logger.error("Game with null home or away team: {}", game);
+                    continue;
+                }
+
                 if (!teamScoresMap.containsKey(homeTeam)) {
                     teamScoresMap.put(homeTeam, new Integer[]{0, 0});
                 }
@@ -181,6 +148,15 @@ public class JpaModel implements AutoCloseable{
                     scoreArr[1]++;
                 }
             }
+            List<Long> teamIds = teamScoresMap.keySet().stream().map(Team::getId).toList();
+            tx.createQuery(
+                    "from Team t where t.id not in :teamIds",
+                    Team.class
+            ).setParameter("teamIds", teamIds)
+                    .getResultList()
+                    // Add teams with no games to the map
+                    .forEach(team -> teamScoresMap.put(team, new Integer[]{0, 0}));
+
             return teamScoresMap.entrySet().stream()
                     .sorted((e1, e2) -> {
                         // First compare on conference name spelling
@@ -200,163 +176,172 @@ public class JpaModel implements AutoCloseable{
     }
 
     private static List<Game> getTeamsAndGames(Session tx) {
-        var games =  tx.createQuery(
-                "from Game g ",
+        return tx.createQuery(
+                "from Game g join fetch g.homeTeam",
                 Game.class
         ).getResultList();
-        var count = games.size();
-        return games;
     }
 
-    /*
-    * The following methods are helper methods that perform the actual database operations.
-    */
-
-//    private static List<DisplayRestaurantMenu> getMenusOfDish(Session tx, String dishName) throws EmptyResultsException {
-//        List<MenuItemEntity> menus = tx.createQuery(
-//                        "select d.menuItems " +
-//                                "from DishEntity d " +
-//                                "where d.dishName = :dishName ",
-//                        MenuItemEntity.class
-//                )
-//                .setParameter("dishName", dishName)
-//                .getResultList();
-//        if (menus.isEmpty()) {
-//            throw EmptyResultsException.fromInput(dishName, " or no 'menu_items' with that dishNo");
-//        }
-//        var result = new ArrayList<DisplayRestaurantMenu>();
-//        for (MenuItemEntity menu :
-//                menus
-//        ) {
-//            result.add(new DisplayRestaurantMenu(menu.getRestaurant(), menu));
-//        }
-//        return result;
-//    }
-//
-//    private static List<DisplayDishMenu> getMenusOfRestaurant(Session tx, String restaurantName, String cityName) throws EmptyResultsException {
-//
-//        List<MenuItemEntity> menus = tx.createQuery(
-//                        "select elements(r.menuItems) " +
-//                                "from RestaurantEntity r " +
-//                                "where r.restaurantName = :rName " +
-//                                "and r.city = :rCity",
-//                        MenuItemEntity.class
-//                )
-//                .setParameter("rName", restaurantName)
-//                .setParameter("rCity", cityName)
-//                .getResultList();
-//
-//        if (menus.isEmpty()) {
-//            throw EmptyResultsException.fromInput(restaurantName, cityName);
-//        }
-//        List<DisplayDishMenu> result = new ArrayList<>();
-//        for (MenuItemEntity dishMenu :
-//                menus
-//        ) {
-//            if (dishMenu.getDish() != null) {
-//                result.add(new DisplayDishMenu(dishMenu.getDish(), dishMenu));
-//            } else {
-//                result.add(new DisplayDishMenu(String.format("**Menu item_no=%d, with price %.2f has no associated dish**\n",
-//                        dishMenu.getItemNo(), dishMenu.getPrice())));
-//            }
-//        }
-//        return result;
-//    }
-
-
-    // Add the itemNo, current time, and current date to the FoodOrder table.
-    private static void addGame(Session tx, Game game) {
-        tx.beginTransaction();
-        // Get menu from cache to avoid LazyInitializationException
-//        menu = tx.get(MenuItemEntity.class, menu.getItemNo());
-//        FoodOrderEntity newOrder = new FoodOrderEntity();
-//        newOrder.setMenu(menu);
-//        newOrder.setDateTimeNow();
-        tx.persist(game);
-//        menu.getFoodOrders().add(newOrder);
-        tx.getTransaction().commit();
-    }
-
-//    private static List<DisplayDishMenuOrder> getOrdersOfRestaurant(Session tx, String restaurantName, String cityName) throws EmptyResultsException {
-//        // The number of queries gets out of hand if we let the EAGER associations do their own thing,
-//        // so we will instead do a single query with raw sql instead. Trading readability and persistence for less DB strain.
-//        List<Object[]> results = tx.createNativeQuery(
-//                        "SELECT dish_name, price, date, time " +
-//                                "FROM food_order o " +
-//                                "JOIN menu_item mi on o.item_no = mi.item_no " +
-//                                "JOIN dish d on mi.dish_no = d.dish_no " +
-//                                "WHERE mi.restaurant_no in " +
-//                                "( " +
-//                                "SELECT restaurant.restaurant_id " +
-//                                "FROM true.restaurant " +
-//                                "WHERE restaurant_name = :rName " +
-//                                "AND city = :rCity" +
-//                                ")",
-//                        Object[].class
-//                )
-//                .setParameter("rName", restaurantName)
-//                .setParameter("rCity", cityName)
-//                .list();
-//
-//        if (results.isEmpty()) {
-//            throw EmptyResultsException.fromInput(restaurantName, cityName, " with possibly no menus for given restaurant");
-//        }
-//        List<DisplayDishMenuOrder> displayOrders = new ArrayList<>();
-//        for (Object[] result :
-//                results
-//        ) {
-//            displayOrders.add(new DisplayDishMenuOrder(result));
-//        }
-//        return displayOrders;
-//    }
-//
-//    private static List<DisplayRestaurantDishOrder> getAllOrders(Session tx) throws EmptyResultsException {
-//        List<DisplayRestaurantDishOrder> restaurantDishOrders = tx.createQuery(
-//                        "select new com.github.truefmartin.views.DisplayRestaurantDishOrder(o.menu.restaurant, o.menu.dish, o)" +
-//                                "from FoodOrderEntity o ",
-//                        DisplayRestaurantDishOrder.class
-//                )
-//                .getResultList();
-//        if (restaurantDishOrders.isEmpty()) {
-//            throw new EmptyResultsException("found no orders in food_order");
-//        }
-//        return restaurantDishOrders;
-//    }
-//
-//    private static void deleteOrder(Session tx, FoodOrderEntity order) {
-//        tx.beginTransaction();
-//        tx.remove(order);
-//        tx.getTransaction().commit();
-//    }
-//
-//    private static RestaurantEntity getRestaurant(Session tx, String restaurantName, String cityName) throws EmptyResultsException {
-//        var restaurant = tx.createQuery(
-//                        "from RestaurantEntity r " +
-//                                "where r.restaurantName = :rName " +
-//                                "and r.city = :rCity",
-//                        RestaurantEntity.class
-//                )
-//                .setParameter("rName", restaurantName)
-//                .setParameter("rCity", cityName).getSingleResultOrNull();
-//        if (restaurant == null ) {
-//            throw EmptyResultsException.fromInput(restaurantName, cityName);
-//        }
-//        return restaurant;
-//    }
-//
-//    private static void addDish(Session tx, DishEntity dish) {
-//        tx.beginTransaction();
-//        tx.persist(dish);
-//        tx.getTransaction().commit();
-//    }
-
-    public List<String> listRelation(String relationName, Class<?> className) {
+    public static List<Game> getGamesOfTeam(Long id) {
         try(var tx = HibernateUtil.openSession()) {
-            return listRelation(tx, relationName, className).stream().map(Object::toString).collect(Collectors.toList());
+            return getGamesOfTeam(tx, id);
         }
     }
 
-    private List<?> listRelation(Session tx, String relationName, Class<?> className) {
+    private static List<Game> getGamesOfTeam(Session tx, Long id) {
+        return tx.createQuery(
+                "from Game g where g.homeTeam.id = :id or g.awayTeam.id = :id",
+                Game.class
+        ).setParameter("id", id).getResultList();
+    }
+
+    public static Team getGamesOfTeam(Team team, String ... teamName) {
+        try(var tx = HibernateUtil.openSession()) {
+            Team loadedTeam;
+            // If the user passed in a string team name, use that. Otherwise, use the team object.
+            if (teamName.length > 0) {
+                loadedTeam = getGamesOfTeamName(tx, teamName[0]);
+            } else {
+                loadedTeam = getGamesOfTeam(tx, team);
+            }
+
+
+            loadedTeam.getGamesAway().forEach(Game::getHomeTeam);
+            loadedTeam.getGamesHome().forEach(Game::getAwayTeam);
+            return loadedTeam;
+        }
+    }
+
+    public static List<Map<String, Object>> getGamesOfTeamId(Long teamId) {
+        try(var tx = HibernateUtil.openSession()) {
+
+            Team team = tx.get(Team.class, teamId);
+            List<Map<String, Object>> tableData = new ArrayList<>();
+            ArrayList<Game> games = new ArrayList<>(team.getGamesHome());
+            games.addAll(team.getGamesAway());
+            games.sort(Comparator.comparing(Game::getDate));
+            games.forEach((game) -> {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("Date", game.getDate());
+                if (game.homeTeam.equals(team)) {
+                    row.put("Result", game.score1 > game.score2 ? "Won" : "Lost");
+                    row.put("Playing As", "Home");
+                    row.put("Against", game.awayTeam.getNickname());
+                    row.put("Of", game.awayTeam.getLocation());
+                    row.put("Score", game.score1 + " - " + game.score2);
+                } else {
+                    row.put("Result", game.score1 < game.score2 ? "Won" : "Lost");
+                    row.put("Playing As", "Away");
+                    row.put("Against", game.homeTeam.getNickname());
+                    row.put("Of", game.homeTeam.getLocation());
+                    row.put("Score", game.score2 + " - " + game.score1);
+                }
+                tableData.add(row);
+            });
+            return tableData;
+        }
+    }
+
+
+    private static Team getGamesOfTeamName(Session tx, String teamName) {
+        return tx.createQuery(
+                "from Team t where t.nickname = :teamName ",
+                Team.class
+        ).setParameter("teamName", teamName).getSingleResult();
+    }
+
+    private static Team getGamesOfTeam(Session tx, Team team) {
+        return tx.createQuery(
+                "from Team t where t = :team ",
+                Team.class
+        ).setParameter("team", team).getSingleResult();
+    }
+
+    public static List<Player> getPlayersIncludeTeams() {
+        try(var tx = HibernateUtil.openSession()) {
+            return getPlayersIncludeTeams(tx);
+        }
+    }
+
+    private static List<Player> getPlayersIncludeTeams(Session tx) {
+        return tx.createQuery("from Player p join fetch p.team", Player.class).getResultList();
+    }
+
+    //7) View all results on a given date. Display the Team name, nicknames, location, and scores for the teams involved. Clearly indicate the winner.
+    public static List<Map<String, Object>> getGamesOfDate(Date date) {
+        try(var tx = HibernateUtil.openSession()) {
+            List<Game> gamesHome = getGamesOfDate(tx, date, true);
+            List<Game> gamesAway = getGamesOfDate(tx, date, false);
+            tx.close();
+            if (gamesHome.isEmpty() && gamesAway.isEmpty()) {
+                logger.error("No games found in database for date: {}", date);
+                return new ArrayList<>();
+            }
+            if (gamesHome.size() != gamesAway.size()) {
+                logger.error("Mismatched number of home and away games for date: {}", date);
+                return new ArrayList<>();
+            }
+            List<Map<String, Object>> response = new ArrayList<>();
+            // Should already be sorted, but just in case
+            gamesHome.sort(Comparator.comparing(Game::getId));
+            gamesAway.sort(Comparator.comparing(Game::getId));
+
+            for (int i = 0; i < gamesHome.size(); i++) {
+                Map<String, Object> row = formatRows(gamesHome, i, gamesAway);
+                response.add(row);
+            }
+            return response;
+         }
+    }
+
+    private static Map<String, Object> formatRows(List<Game> gamesHome, int i, List<Game> gamesAway) {
+        Game homeGame = gamesHome.get(i);
+        Game awayGame = gamesAway.get(i);
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("Home Team", homeGame.getHomeTeam().getNickname());
+        row.put("Home Team Location", homeGame.getHomeTeam().getLocation());
+        row.put("Home Team Score", homeGame.getScore1());
+        row.put("Away Team", awayGame.getAwayTeam().getNickname());
+        row.put("Away Team Location", awayGame.getAwayTeam().getLocation());
+        row.put("Away Team Score", awayGame.getScore2());
+        if (homeGame.getScore1() > awayGame.getScore2()) {
+            row.put("Winner", homeGame.getHomeTeam().getNickname());
+        } else if (homeGame.getScore1() < awayGame.getScore2()) {
+            row.put("Winner", awayGame.getAwayTeam().getNickname());
+        } else {
+            row.put("Winner", "???");
+        }
+        return row;
+    }
+
+    private static List<Game> getGamesOfDate(Session tx, Date date, boolean homeTeam) {
+        String team = "g.homeTeam";
+        if (!homeTeam) {
+            team = "g.awayTeam";
+        }
+        return tx.createQuery(
+                "from Game g join fetch " + team + " where g.date = :date",
+                Game.class
+        ).setParameter("date", date).getResultList();
+    }
+
+
+    // Add the itemNo, current time, and current date to the FoodOrder table.
+    private static void addGame(Session tx, Game game, Long homeTeamId, Long awayTeamId) {
+        tx.beginTransaction();
+        game.setHomeTeam(tx.get(Team.class, homeTeamId));
+        game.setAwayTeam(tx.get(Team.class, awayTeamId));
+        tx.persist(game);
+        tx.getTransaction().commit();
+    }
+
+    public static List<?> listRelation(String relationName, Class<?> className) {
+        try(var tx = HibernateUtil.openSession()) {
+            return listRelation(tx, relationName, className);
+        }
+    }
+
+    private static List<?> listRelation(Session tx, String relationName, Class<?> className) {
         var entityName = "";
         switch (relationName){
             case "game":

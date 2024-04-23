@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background-color: #f1f1f1;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 5;
+        }
+        .navbar a {
+            color: black;
+            text-decoration: none;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+        }
+
+        thead th {
+            margin-top: 40px;
+            background-color: #395870;
+            color: #fff;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        th {
+            height: 40px;
+            font-size: 16px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        input:read-only {
+            background-color: #ddd; /* This will make the background color gray */
+            cursor: not-allowed; /* This will change the cursor to a "not allowed" cursor when hovering over the input */
+            border: 4px solid #000000;
+        }
+        toast {
+            visibility: hidden;
+            max-width: 50%;
+            height: auto;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 25%;
+            font-size: 17px;
+            margin-left: -125px;
+            padding: 10px;
+            transition: visibility 0.5s, opacity 0.5s linear;
+            opacity: 0;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            transition: visibility 0.5s, opacity 0.5s linear;
+        }
+
+        .toast.hide {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.5s, opacity 0.5s linear;
+        }
+
+        /*form {*/
+        /*    margin: 20px;*/
+        /*    padding: 20px;*/
+        /*    background-color: #fff;*/
+        /*    border-radius: 8px;*/
+        /*    box-shadow: 0 4px 8px rgba(0,0,0,0.5);*/
+        /*    text-align: left;*/
+        /*    align-content: center;*/
+        /*}*/
+
+        input:invalid {
+            border: 2px dashed red;
+        }
+
+        form input {
+            margin: 10px 0;
+            align-items: center;
+            width: 30%;
+            left: 100%
+        }
+
+    </style>
+</head>
+<!--<div th:insert="~{fragments/search :: search-container('')}"></div>-->
+<body>
+<!--<div th:replace="~{fragments/header :: menus}"></div>-->
+<div th:replace="~{fragments/new-header :: menus}"></div>
+
+<h3 style="text-align: center; margin-top: 15%" th:text="${title}">Select team to retrieve information about.</h3>
+<div id="toast" class="toast hide">
+    This is a toast message.
+</div>
+<div class="formContainer">
+<!--<form th:action="@{/addPlayer}" th:object="${player}" method="post">-->
+<!--    <input type="hidden" name="homeTeamId" th:field="${teamIds.homeTeamId}" />-->
+
+<!--    <div>-->
+<!--        <label style="margin-right: 50px;" for="name">Name</label>-->
+<!--        <input type="text" id="name" th:field="*{name}" required minlength="3" maxlength="50"/>-->
+<!--    </div>-->
+<!--    <div>-->
+<!--        <label for="position">Position</label>-->
+<!--        <select id="position" name="position" th:field="*{position}">-->
+<!--            <option th:each="thisPosition : ${T(com.github.truefmartin.models.PositionType).values()}" th:text="${thisPosition.displayValue}" th:value="${thisPosition}" ></option>-->
+<!--        </select>-->
+<!--    </div>-->
+<!--    <div style="border-color: #000000">-->
+<!--        <label for="team">Team</label>-->
+<!--        <input type="text" id="team" readonly required/>-->
+<!--    </div>-->
+<!--    <button style="margin: 8px; margin-left: 40%; margin-right:40%" type="submit">Add Player</button>-->
+<!--</form>-->
+</div>
+<div>
+<table style="z-index: -1">
+    <thead style="z-index: -1">
+    <tr style="z-index: -1">
+        <th>Team Name</th>
+        <th>Select</th>
+        <th>View Players</th>
+        <th>View Games</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="thisTeam: ${teams}">
+        <td th:text="${thisTeam.nickname}"></td>
+        <td th:text="${thisTeam.location}"></td>
+        <td th:attr="id=${thisTeam.id ?: #ids.seq('backup')}">
+            <form th:action="@{/playersOf}" th:object="${thisTeam}" method="get">
+                <input type="hidden" name="teamId" th:value="*{id}" />
+                <input type="hidden" name="teamName" th:value="*{nickname}"/>
+                <input type="hidden" name="teamLocation" th:value="*{location}"/>
+                <button type="submit">View Players</button>
+            </form>
+        </td>
+        <td>
+            <form th:action="@{/gamesOf}" th:object="${thisTeam}" method="get">
+                <input type="hidden" name="teamId" th:value="*{id}" />
+                <input type="hidden" name="teamName" th:value="*{nickname}"/>
+                <input type="hidden" name="teamLocation" th:value="*{location}"/>
+                <button type="submit">View Games</button>
+            </form>
+        </td>
+<!--        <td><button type="button" th:attr="onclick=|selectHomeTeam('${thisTeam.id}', '${thisTeam.nickname}')|">Select</button></td>-->
+    </tr>
+    </tbody>
+</table>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script>
+    function selectHomeTeam(teamId, teamName) {
+    // document.getElementById('team').value = teamName;
+    // document.querySelector('input[name="homeTeamId"]').value = teamId;
+}
+
+
+
+    function showToast(message) {
+        var toast = document.getElementById("toast");
+        toast.className = "toast show";
+        toast.textContent = message;
+
+        setTimeout(function(){
+            toast.className = toast.className.replace("show", "hide");
+        }, 2000);
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

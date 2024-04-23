@@ -66,12 +66,7 @@ limitations under the License.
 
     <!-- Optionally include development tools -->
     <!-- Provides Automatic Restart functionality -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-      <scope>runtime</scope>
-      <optional>true</optional>
-    </dependency>
+
     <!-- Provides Pretty Printed JSON logs -->
     <dependency>
       <groupId>ch.qos.logback.contrib</groupId>
