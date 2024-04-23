@@ -29,12 +29,12 @@ public class Team {
         nfc;
         private final String displayValue;
         ConferenceType() {
-            this.displayValue = DivisionType.inner.displayNames.get(this.ordinal());
+            this.displayValue = Inner.displayNames.get(this.ordinal());
         }
         public String getDisplayValue() {
             return displayValue;
         }
-        private static class inner {
+        private static class Inner {
             static ArrayList<String> displayNames = new ArrayList<>(){
                 {
                     add("AFC");
@@ -54,12 +54,12 @@ public class Team {
         west;
         private final String displayValue;
         DivisionType() {
-            this.displayValue = inner.displayNames.get(this.ordinal());
+            this.displayValue = Inner.displayNames.get(this.ordinal());
         }
         public String getDisplayValue() {
             return displayValue;
         }
-        private static class inner {
+        private static class Inner {
             static ArrayList<String> displayNames = new ArrayList<>(){
                 {
                     add("East");

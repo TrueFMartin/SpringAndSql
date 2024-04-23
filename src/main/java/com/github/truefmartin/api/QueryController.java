@@ -6,16 +6,10 @@ import com.github.truefmartin.models.Game;
 import com.github.truefmartin.models.Player;
 import com.github.truefmartin.models.PositionType;
 import com.github.truefmartin.models.Team;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.util.*;
 
 
@@ -30,7 +24,6 @@ public class QueryController {
     public String topTeams(Model model) {
         var teamAndWins = JpaModel.getTeamsAndWins();
         List<Map<String, Object>> tableData = new ArrayList<>();
-        Set<String> headers = new LinkedHashSet<>();  // Maintains insertion order
         teamAndWins.forEach((team, wins) -> {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("Team", team.getNickname());
@@ -38,10 +31,9 @@ public class QueryController {
             row.put("Total Wins", wins[0]);
             row.put("Conference Wins", wins[1]);
             tableData.add(row);
-            if (headers.isEmpty()) {
-                row.keySet().forEach(headers::add);
-            }
         });
+
+        Set<String> headers = new LinkedHashSet<>(tableData.get(0).keySet());
         model.addAttribute("title", "Top Teams by:");
         model.addAttribute("subtitle", "Conference > Total Wins > Conference Wins");
         model.addAttribute("headers", headers);
@@ -77,17 +69,15 @@ public class QueryController {
             return "errors";
         }
         List<Map<String, Object>> tableData = new ArrayList<>();
-        Set<String> headers = new LinkedHashSet<>();  // Maintains insertion order
         players.stream().sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER)).toList().forEach(player -> {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("Name", player.getName());
             row.put("Position", player.getPosition().getDisplayValue());
             row.put("Team", player.getTeam().getNickname());
             tableData.add(row);
-            if (headers.isEmpty()) {
-                row.keySet().forEach(headers::add);
-            }
         });
+
+        Set<String> headers = new LinkedHashSet<>(tableData.get(0).keySet());
         model.addAttribute("title", "Players");
         model.addAttribute("subtitle", "Sorted by Name");
         model.addAttribute("headers", headers);
@@ -112,17 +102,14 @@ public class QueryController {
             return "errors";
         }
         List<Map<String, Object>> tableData = new ArrayList<>();
-        Set<String> headers = new LinkedHashSet<>();  // Maintains insertion order
         players.stream().sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER)).toList().forEach(p -> {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("Name", p.getName());
             row.put("Position", p.getPosition().getDisplayValue());
             row.put("Team", p.getTeam().getNickname());
             tableData.add(row);
-            if (headers.isEmpty()) {
-                row.keySet().forEach(headers::add);
-            }
         });
+        Set<String> headers = new LinkedHashSet<>(tableData.get(0).keySet());
         model.addAttribute("title", "Players of Position");
         model.addAttribute("subtitle", position);
         model.addAttribute("headers", headers);
@@ -148,7 +135,6 @@ public class QueryController {
         JpaModel.addGame(game, teamIds.getHomeTeamId(), teamIds.getAwayTeamId());
         model.addAttribute("teamId", teamIds.homeTeamId);
         return "redirect:/addGame";
-//        return showGamesOfTeam(teamIds.getHomeTeamId(), model);
     }
 
     @GetMapping("/byDate")
@@ -165,8 +151,7 @@ public class QueryController {
             model.addAttribute("notFound", true);
             return "games-by-date";
         }
-        Set<String> headers = new LinkedHashSet<>();  // Maintains insertion order
-        tableData.get(0).keySet().forEach(headers::add);
+        Set<String> headers = new LinkedHashSet<>(tableData.get(0).keySet());
         model.addAttribute("headers", headers);
         model.addAttribute("tableData", tableData);
         return "games-by-date";
@@ -203,8 +188,7 @@ public class QueryController {
             row.put("Position", player.getPosition().getDisplayValue());
             tableData.add(row);
         });
-        Set<String> headers = new LinkedHashSet<>();  // Maintains insertion order
-        tableData.get(0).keySet().forEach(headers::add);
+        Set<String> headers = new LinkedHashSet<>(tableData.get(0).keySet());
         model.addAttribute("title", "Players of");
         model.addAttribute("subtitle", teamName + " From " + teamLocation);
         model.addAttribute("headers", headers);
