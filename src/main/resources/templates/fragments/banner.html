@@ -1,0 +1,8 @@
+<div th:fragment="banner(justAdded)" th:if="${justAdded}" id="banner" style="width: 100%; padding: 20px; text-align: center; background-color: rgba(57, 115, 58, 0.9); color: #ffffff; position: fixed; font-size: x-large; top: 10%; left: 0; z-index: 1;">
+  Added Successfully
+  <script>
+    setTimeout(() => {
+      document.getElementById('banner').style.display = 'none';
+    }, 3000);
+  </script>
+</div>

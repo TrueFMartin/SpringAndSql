@@ -60,10 +60,9 @@
         }
     </style>
 </head>
-<!--<div th:insert="~{fragments/search :: search-container('')}"></div>-->
 <body>
-<!--<div th:replace="~{fragments/header :: menus}"></div>-->
 <div th:replace="~{fragments/new-header :: menus}"></div>
+<div th:replace="~{fragments/banner :: banner(${justAdded})}"></div>
 
 <h1 style="text-align: center; margin-top: 15%" th:text="${title}">Results</h1>
 <h2 style="text-align: center;" th:text="${subtitle}"></h2>

@@ -59,8 +59,8 @@
             background-color: #f1f1f1;
         }
         input:read-only {
-            background-color: #ddd; /* This will make the background color gray */
-            cursor: not-allowed; /* This will change the cursor to a "not allowed" cursor when hovering over the input */
+            background-color: #ddd;
+            cursor: not-allowed;
             border: 4px solid #000000;
         }
         toast {
@@ -116,15 +116,15 @@
 
     </style>
 </head>
-<!--<div th:insert="~{fragments/search :: search-container('')}"></div>-->
 <body>
-<!--<div th:replace="~{fragments/header :: menus}"></div>-->
 <div th:replace="~{fragments/new-header :: menus}"></div>
 
 <h1 style="text-align: center; margin-top: 15%">Add Game</h1>
 <div id="toast" class="toast hide">
     This is a toast message.
 </div>
+<div th:replace="~{fragments/banner :: banner(${justAdded})}"></div>
+
 <div class="formContainer">
 <form th:action="@{/addGame}" th:object="${game}" method="post">
     <input type="hidden" name="homeTeamId" th:field="${teamIds.homeTeamId}" required/>
@@ -155,6 +155,7 @@
     </div>
     <button style="margin: 8px; margin-left: 40%; margin-right:40%" type="submit">Add Game</button>
 </form>
+</div>
 <div>
 <table style="z-index: -1">
     <thead style="z-index: -1">

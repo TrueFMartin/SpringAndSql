@@ -17,7 +17,7 @@ public class JpaModel implements AutoCloseable{
             LoggerFactory.getLogger(JpaModel.class);
     /**
      * Constructs a new JpaModel object.
-     * If the sessionFactory is null, it builds a new one.
+     * If the sessionFactory is null or closed, it builds a new one.
      */
     public JpaModel() {
         if (!HibernateUtil.isOpen()) {
@@ -34,14 +34,24 @@ public class JpaModel implements AutoCloseable{
         HibernateUtil.close();
     }
 
-
+    /**
+     * Adds a game to the database.
+     * @param game the game to add
+     * @param homeTeamId the ID of the home team
+     * @param awayTeamId the ID of the away team
+     */
     public static void addGame(Game game, Long homeTeamId, Long awayTeamId) {
         try(var tx = HibernateUtil.openSession()) {
             addGame(tx, game, homeTeamId, awayTeamId);
         }
     }
 
-
+    /**
+     * Adds a team to the database and returns its ID.
+     * @param team the team to add
+     * @param getID whether to return the ID of the team
+     * @return the ID of the team, or -1 if getID is false
+     */
     public static Long addTeam(Team team, boolean getID) {
         try(var tx = HibernateUtil.openSession()) {
             addTeam(tx, team);
@@ -52,29 +62,58 @@ public class JpaModel implements AutoCloseable{
         }
     }
 
+    /**
+     * Adds a team to the database.
+     * @param tx the current session
+     * @param team the team to add
+     */
     private static void addTeam(Session tx, Team team) {
         tx.beginTransaction();
         tx.persist(team);
         tx.getTransaction().commit();
     }
+
+    /**
+     * Returns the players of a specific team.
+     * @param teamId the ID of the team
+     * @return a list of players of the team
+     */
     public static List<Player> getPlayersOfTeam(Long teamId) {
         try(var tx = HibernateUtil.openSession()) {
             return getPlayersOfTeam(tx, teamId);
         }
     }
 
+    /**
+     * Returns the players of a specific team.
+     * @param tx the current session
+     * @param teamId the ID of the team
+     * @return a list of players of the team
+     */
     private static List<Player> getPlayersOfTeam(Session tx, Long teamId) {
         return tx.createQuery(
                 "from Player p where p.team.id = :teamId",
                 Player.class
         ).setParameter("teamId", teamId).getResultList();
     }
+
+    /**
+     * Adds a player to a specific team.
+     * @param player the player to add
+     * @param teamId the ID of the team
+     */
     public static void addPlayer(Player player, Long teamId) {
         try(var tx = HibernateUtil.openSession()) {
             addPlayer(tx, player, teamId);
         }
     }
 
+    /**
+     * Adds a player to a specific team.
+     * @param tx the current session
+     * @param player the player to add
+     * @param teamId the ID of the team
+     */
     private static void addPlayer(Session tx, Player player, Long teamId) {
         tx.beginTransaction();
         player.setTeam(tx.get(Team.class, teamId));
@@ -82,13 +121,23 @@ public class JpaModel implements AutoCloseable{
         tx.getTransaction().commit();
     }
 
-
+    /**
+     * Returns the players of a specific team.
+     * @param team the team
+     * @return a list of players of the team
+     */
     public static List<Player> getPlayersOfTeam(Team team) {
         try(var tx = HibernateUtil.openSession()) {
             return getPlayersOfTeam(tx, team);
         }
     }
 
+    /**
+     * Returns the players of a specific team.
+     * @param tx the current session
+     * @param team the team
+     * @return a list of players of the team
+     */
     private static List<Player> getPlayersOfTeam(Session tx, Team team) {
         return tx.createQuery(
                 "from Player p where p.team = :team",
@@ -96,12 +145,23 @@ public class JpaModel implements AutoCloseable{
         ).setParameter("team", team).getResultList();
     }
 
+    /**
+     * Returns the players of a specific position.
+     * @param position the position
+     * @return a list of players of the position
+     */
     public static List<Player> getPlayerOfPosition(PositionType position) {
         try(var tx = HibernateUtil.openSession()) {
             return getPlayerOfPosition(tx, position);
         }
     }
 
+    /**
+     * Returns the players of a specific position.
+     * @param tx the current session
+     * @param position the position
+     * @return a list of players of the position
+     */
     private static List<Player> getPlayerOfPosition(Session tx, PositionType position) {
         return tx.createQuery(
                 "from Player p join fetch p.team where p.position = :position",
@@ -109,6 +169,10 @@ public class JpaModel implements AutoCloseable{
         ).setParameter("position", position).getResultList();
     }
 
+    /**
+     * Returns a map of teams and their wins.
+     * @return a map of teams and their wins
+     */
     public static LinkedHashMap<Team, Integer[]> getTeamsAndWins() {
         try(var tx = HibernateUtil.openSession()) {
             var games = getTeamsAndGames(tx);
@@ -175,6 +239,10 @@ public class JpaModel implements AutoCloseable{
         }
     }
 
+    /**
+     * Returns a list of teams and games.
+     * @return a list of teams and games
+     */
     private static List<Game> getTeamsAndGames(Session tx) {
         return tx.createQuery(
                 "from Game g join fetch g.homeTeam",
@@ -182,12 +250,23 @@ public class JpaModel implements AutoCloseable{
         ).getResultList();
     }
 
+    /**
+     * Returns a list of games of a specific team.
+     * @param id the ID of the team
+     * @return a list of games of the team
+     */
     public static List<Game> getGamesOfTeam(Long id) {
         try(var tx = HibernateUtil.openSession()) {
             return getGamesOfTeam(tx, id);
         }
     }
 
+    /**
+     * Returns a list of games of a specific team.
+     * @param tx the current session
+     * @param id the ID of the team
+     * @return a list of games of the team
+     */
     private static List<Game> getGamesOfTeam(Session tx, Long id) {
         return tx.createQuery(
                 "from Game g where g.homeTeam.id = :id or g.awayTeam.id = :id",
@@ -195,6 +274,12 @@ public class JpaModel implements AutoCloseable{
         ).setParameter("id", id).getResultList();
     }
 
+    /**
+     * Returns a list of games of a specific team.
+     * @param team the team
+     * @param teamName *optional* get games by team name rather than id, if provided.
+     * @return a list of games of the team
+     */
     public static Team getGamesOfTeam(Team team, String ... teamName) {
         try(var tx = HibernateUtil.openSession()) {
             Team loadedTeam;
@@ -212,6 +297,11 @@ public class JpaModel implements AutoCloseable{
         }
     }
 
+    /**
+     * Returns a list of games of a specific team.
+     * @param teamId of the team
+     * @return a list of rows of games of the team formatted for table display
+     */
     public static List<Map<String, Object>> getGamesOfTeamId(Long teamId) {
         try(var tx = HibernateUtil.openSession()) {
 
@@ -257,6 +347,10 @@ public class JpaModel implements AutoCloseable{
         ).setParameter("team", team).getSingleResult();
     }
 
+    /**
+     * Returns a list of players with their teams eagerly fetched.
+     * @return a list of players
+     */
     public static List<Player> getPlayersIncludeTeams() {
         try(var tx = HibernateUtil.openSession()) {
             return getPlayersIncludeTeams(tx);
@@ -267,7 +361,11 @@ public class JpaModel implements AutoCloseable{
         return tx.createQuery("from Player p join fetch p.team", Player.class).getResultList();
     }
 
-    //7) View all results on a given date. Display the Team name, nicknames, location, and scores for the teams involved. Clearly indicate the winner.
+    /**
+     * Returns a list of games by date.
+     * @param date the date of the games
+     * @return a list of games by date, empty list if none found
+     */
     public static List<Map<String, Object>> getGamesOfDate(Date date) {
         try(var tx = HibernateUtil.openSession()) {
             List<Game> gamesHome = getGamesOfDate(tx, date, true);
@@ -335,6 +433,12 @@ public class JpaModel implements AutoCloseable{
         tx.getTransaction().commit();
     }
 
+    /**
+     * Returns a list of all rows of a given relation.
+     * @param relationName the name of the relation
+     * @param className the class of the relation
+     * @return a list of all rows
+     */
     public static List<?> listRelation(String relationName, Class<?> className) {
         try(var tx = HibernateUtil.openSession()) {
             return listRelation(tx, relationName, className);
